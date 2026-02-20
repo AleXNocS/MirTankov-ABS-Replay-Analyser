@@ -168,9 +168,9 @@ The .exe version is completely standalone and portable
 
 
 ### 👥 Авторы / Authors
-AleXNocS – Lead Developer – GitHub
+[AleXNocS](https://github.com/AleXNocS) – something like developer 
 
-Sk0p1 (aka panda_rez) – Co-Developer & Tester – GitHub
+Sk0p1 (aka panda_rez) – Inspiration+Motivation 😎 & Tester
 
 ### 🤝 Участие в разработке / Contributing
 Contributions are welcome! Feel free to:
@@ -190,6 +190,6 @@ Thanks to the World of Tanks/Mir Tankov community
 Inspired by various replay parsing tools
 Спасибо сообществу Мира танков
 Вдохновлено различными инструментами для парсинга реплеев
-Отдельно спасибо владельцу сайта wn8.pro который вырезал RU регион без причины.
+**Отдельно спасибо владельцу сайта wn8.pro который вырезал RU регион без указания причины.**
 ### 🚀 Скачивайте и анализируйте свои бои!
 ### 🚀 Download now and analyze your battles!
