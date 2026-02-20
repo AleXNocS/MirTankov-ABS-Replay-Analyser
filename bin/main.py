@@ -34,7 +34,7 @@ def main():
     else:
         print("\n❌ Не удалось обработать файлы")
     
-   # input("\nНажмите Enter для выхода...")
+    # input("\nНажмите Enter для выхода...")
 
 if __name__ == "__main__":
     main()
