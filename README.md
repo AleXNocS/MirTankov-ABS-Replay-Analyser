@@ -167,14 +167,14 @@ The .exe version is completely standalone and portable
 
 
 ### 🤝 Участие в разработке / Contributing
-Contributions are welcome! Feel free to:
-Report bugs
-Suggest new features
-Submit pull requests
-Приветствуется любой вклад! Вы можете:
-Сообщать об ошибках
-Предлагать новые функции
-Отправлять pull request'ы
+Contributions are welcome! Feel free to:  
+- Report bugs
+- Suggest new features
+- Submit pull requests
+Приветствуется любой вклад! Вы можете:  
+- Сообщать об ошибках
+- Предлагать новые функции
+- Отправлять pull request'ы
 
 ### 📄 Лицензия / License
 -
