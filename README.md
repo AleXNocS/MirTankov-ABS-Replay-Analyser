@@ -134,7 +134,7 @@ pip install pyinstaller
 python -m PyInstaller --onefile --windowed --icon=icon.ico --name "MirTankov_ABS_Analyzer" main.py
 # Готовый .exe файл появится в папке 'dist'
 ```
-
+---
 
 ### 📁 Формат вывода / Output format
 CSV Structure / Структура CSV
@@ -143,14 +143,16 @@ Player1	2500	10	2800	3200	...
 Player2	1800	8	-	1950	...
 
 ### 🛠️ Требования / Requirements
-For .exe version / Для .exe версии
-Windows 7/8/10/11
-No Python required – just download and run!
+**For .exe version / Для .exe версии**  
+Windows 7/8/10/11  
+No Python required – just download and run!  
 
-For source code / Для исходного кода
-Python 3.8+
-Windows OS (for .mtreplay files and native file dialog)
-No additional packages needed – all dependencies are in standard library
+**For source code / Для исходного кода**  
+Python 3.8+  
+Windows OS (for .mtreplay files and native file dialog)  
+No additional packages needed – all dependencies are in standard library  
+
+---
 
 ### 📝 Примечания / Notes
 
@@ -165,20 +167,20 @@ The .exe version is completely standalone and portable
 
 
 
-
-### 🤝 Участие в разработке / Contributing
-Contributions are welcome! Feel free to:  
+---
+## 🤝 Участие в разработке / Contributing
+### Contributions are welcome! Feel free to:  
 - Report bugs
 - Suggest new features
 - Submit pull requests  
-Приветствуется любой вклад! Вы можете:  
+### Приветствуется любой вклад! Вы можете:  
 - Сообщать об ошибках
 - Предлагать новые функции
 - Отправлять pull request'ы
-
+---
 ### 📄 Лицензия / License
 -
-
+---
 ### 🙏 Благодарности / Acknowledgements
 Thanks to the World of Tanks/Mir Tankov community  
 Inspired by various replay parsing tools  
