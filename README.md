@@ -18,7 +18,7 @@
 
 #### English
 1. **Download the ready-to-use executable:**
-   - Go to [Releases](https://github.com/AleXNocS/MirTankov-ABS-Replay-Analyzer/releases) page
+   - Go to [Releases](https://github.com/AleXNocS/MirTankov-ABS-Replay-Analyser/releases) page
    - Download `MirTankov_ABS_Analyzer.exe`
    - Run it directly – **no Python installation required!**
 
