@@ -170,7 +170,7 @@ The .exe version is completely standalone and portable
 Contributions are welcome! Feel free to:  
 - Report bugs
 - Suggest new features
-- Submit pull requests
+- Submit pull requests  
 Приветствуется любой вклад! Вы можете:  
 - Сообщать об ошибках
 - Предлагать новые функции
