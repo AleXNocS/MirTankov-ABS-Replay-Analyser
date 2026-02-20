@@ -14,20 +14,19 @@ class TableViewer:
         self.sort_column = None
         self.sort_reverse = False
         self.search_var = None
-        self.dark_mode = True  # По умолчанию темная тема
+        self.dark_mode = True
         
         self.window = tk.Tk()
         self.window.title("📊 Результаты анализа реплеев")
         self.window.geometry("1400x800")
         
-        # Делаем окно поверх всех
+        # Делаем окно поверх всех только при запуске
         self.window.attributes('-topmost', True)
+        self.window.after(500, lambda: self.window.attributes('-topmost', False))
         
         # Цветовые схемы
         self.setup_colors()
         self.setup_ui()
-        
-        # Применяем тему после создания всех виджетов
         self.apply_theme()
         
     def setup_colors(self):
@@ -76,15 +75,12 @@ class TableViewer:
                     widget.configure(bg=self.frame_bg)
                 except:
                     pass
-                
-                # Рекурсивно обновляем дочерние элементы
                 self._apply_theme_to_children(widget)
         
         # Обновляем стиль Treeview
         style = ttk.Style()
         style.theme_use('default')
         
-        # Настройка Treeview
         style.configure("Custom.Treeview",
                        background=self.tree_bg,
                        foreground=self.tree_fg,
@@ -92,7 +88,6 @@ class TableViewer:
                        font=('Arial', 9),
                        rowheight=28)
         
-        # Настройка заголовков
         style.configure("Custom.Treeview.Heading",
                        background=self.tree_heading_bg,
                        foreground=self.tree_heading_fg,
@@ -100,64 +95,42 @@ class TableViewer:
                        padding=(5, 5, 5, 15),
                        relief="raised")
         
-        # Настройка выделения
         style.map('Custom.Treeview',
                   background=[('selected', self.highlight_color)],
                   foreground=[('selected', self.tree_fg)])
         
         self.tree.configure(style="Custom.Treeview")
-        
-        # Обновляем статус бар
         self.status_bar.configure(bg=self.status_bg, fg=self.status_fg)
         
-        # Обновляем текст кнопки темы
         theme_text = "🌙 Темная" if not self.dark_mode else "☀️ Светлая"
         self.theme_btn.configure(text=theme_text)
     
     def _apply_theme_to_children(self, parent):
         """Рекурсивно применяет тему к дочерним элементам"""
         for child in parent.winfo_children():
-            # Применяем цвета в зависимости от типа виджета
             if isinstance(child, tk.Frame):
                 try:
                     child.configure(bg=self.frame_bg)
                 except:
                     pass
                 self._apply_theme_to_children(child)
-                
             elif isinstance(child, tk.Label):
                 try:
                     child.configure(bg=self.frame_bg, fg=self.fg_color)
                 except:
                     pass
-                    
             elif isinstance(child, tk.Entry):
                 try:
                     child.configure(bg=self.entry_bg, fg=self.entry_fg,
                                   insertbackground=self.fg_color)
                 except:
                     pass
-                    
             elif isinstance(child, tk.Button):
                 try:
                     child.configure(bg=self.button_bg, fg=self.button_fg,
                                   activebackground=self.highlight_color)
                 except:
                     pass
-                    
-            elif isinstance(child, tk.Listbox):
-                try:
-                    child.configure(bg=self.entry_bg, fg=self.entry_fg)
-                except:
-                    pass
-                    
-            elif isinstance(child, tk.Text):
-                try:
-                    child.configure(bg=self.entry_bg, fg=self.entry_fg)
-                except:
-                    pass
-                    
-            # Для ttk виджетов используем style
             elif isinstance(child, ttk.Combobox):
                 try:
                     style = ttk.Style()
@@ -175,10 +148,8 @@ class TableViewer:
         self.dark_mode = not self.dark_mode
         self.setup_colors()
         self.apply_theme()
-        
+    
     def setup_ui(self):
-        self.window.configure(bg=self.bg_color)
-        
         # Верхняя панель с информацией
         info_frame = tk.Frame(self.window)
         info_frame.pack(fill=tk.X, padx=10, pady=5)
@@ -188,7 +159,6 @@ class TableViewer:
                              font=('Arial', 11, 'bold'))
         info_label.pack(side=tk.LEFT)
         
-        # Кнопка переключения темы
         self.theme_btn = tk.Button(info_frame, 
                                    text="☀️ Светлая" if self.dark_mode else "🌙 Темная",
                                    command=self.toggle_theme,
@@ -199,7 +169,6 @@ class TableViewer:
         control_frame = tk.Frame(self.window)
         control_frame.pack(fill=tk.X, padx=10, pady=5)
         
-        # Поиск по игроку
         search_label = tk.Label(control_frame, text="🔍 Поиск игрока:", font=('Arial', 9))
         search_label.pack(side=tk.LEFT, padx=5)
         
@@ -209,15 +178,12 @@ class TableViewer:
                                width=30, font=('Arial', 9))
         search_entry.pack(side=tk.LEFT, padx=5)
         
-        # Кнопка очистки поиска
         clear_btn = tk.Button(control_frame, text="✖", command=self.clear_search, 
                              font=('Arial', 8), width=2)
         clear_btn.pack(side=tk.LEFT, padx=2)
         
-        # Разделитель
         tk.Frame(control_frame, width=20).pack(side=tk.LEFT)
         
-        # Сортировка
         sort_label = tk.Label(control_frame, text="📊 Сортировать по:", font=('Arial', 9))
         sort_label.pack(side=tk.LEFT, padx=5)
         
@@ -252,7 +218,6 @@ class TableViewer:
                              font=('Arial', 10, 'bold'), padx=20)
         close_btn.pack(side=tk.LEFT, padx=5)
         
-        # Статистика по фильтру
         self.filter_stats_label = tk.Label(button_frame, text="", font=('Arial', 9), fg='gray')
         self.filter_stats_label.pack(side=tk.RIGHT, padx=10)
         
@@ -260,11 +225,9 @@ class TableViewer:
         table_frame = tk.Frame(self.window)
         table_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
         
-        # Создаем Scrollbar
         vsb = tk.Scrollbar(table_frame, orient="vertical")
         hsb = tk.Scrollbar(table_frame, orient="horizontal")
         
-        # Создаем Treeview
         self.tree = ttk.Treeview(table_frame, 
                                  columns=list(range(len(self.headers))),
                                  show="headings",
@@ -274,22 +237,18 @@ class TableViewer:
         vsb.config(command=self.tree.yview)
         hsb.config(command=self.tree.xview)
         
-        # Настраиваем заголовки
         for i, header in enumerate(self.headers):
             self.tree.heading(i, text=header, anchor='center')
             
-            # Устанавливаем ширину колонок
             if i == 0:
                 self.tree.column(i, width=150, minwidth=100, anchor='w')
             elif i == 1 or i == 2:
                 self.tree.column(i, width=90, minwidth=70, anchor='center')
             else:
-                self.tree.column(i, width=200, minwidth=160, anchor='center')
+                self.tree.column(i, width=250, minwidth=200, anchor='center')  # Увеличил ширину
         
-        # Добавляем данные
         self.refresh_table()
         
-        # Размещаем таблицу и скроллы
         self.tree.grid(row=0, column=0, sticky="nsew")
         vsb.grid(row=0, column=1, sticky="ns")
         hsb.grid(row=1, column=0, sticky="ew")
@@ -297,21 +256,17 @@ class TableViewer:
         table_frame.grid_rowconfigure(0, weight=1)
         table_frame.grid_columnconfigure(0, weight=1)
         
-        # Статус бар
         self.status_bar = tk.Label(self.window, text="Готово", bd=1, relief=tk.SUNKEN, anchor=tk.W)
         self.status_bar.pack(side=tk.BOTTOM, fill=tk.X)
     
     def refresh_table(self):
         """Обновляет таблицу с текущими данными"""
-        # Очищаем таблицу
         for row in self.tree.get_children():
             self.tree.delete(row)
         
-        # Добавляем данные
         for row in self.data:
             self.tree.insert("", tk.END, values=row)
         
-        # Обновляем статистику фильтра
         total_players = len(self.original_data)
         shown_players = len(self.data)
         if shown_players < total_players:
@@ -329,7 +284,6 @@ class TableViewer:
             self.data = [row for row in self.original_data 
                         if search_text in row[0].lower()]
         
-        # Применяем текущую сортировку
         self.apply_sort()
         self.refresh_table()
     

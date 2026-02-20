@@ -335,6 +335,9 @@
   ('models.analyzer',
    'Z:\\PY_mt_replay_analytics\\MirTankov-ABS-Replay-Analyser\\bin\\models\\analyzer.py',
    'PYMODULE'),
+  ('models.tank_lib',
+   'Z:\\PY_mt_replay_analytics\\MirTankov-ABS-Replay-Analyser\\bin\\models\\tank_lib.py',
+   'PYMODULE'),
   ('numbers',
    'C:\\Program '
    'Files\\WindowsApps\\PythonSoftwareFoundation.Python.3.13_3.13.2544.0_x64__qbz5n2kfra8p0\\Lib\\numbers.py',

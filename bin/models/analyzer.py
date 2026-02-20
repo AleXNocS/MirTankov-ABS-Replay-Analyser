@@ -1,14 +1,43 @@
 import json
 from pathlib import Path
 from collections import defaultdict
+from .tank_lib import tank_names  # Импортируем словарь с названиями танков
 
 class BattleMatrixAnalyzer:
     def __init__(self):
         self.players = set()
         self.battles = []
-        self.battle_data = defaultdict(dict)
+        self.battle_data = defaultdict(dict)      # battle_id -> player_name -> damage
+        self.battle_vehicles = defaultdict(dict)  # battle_id -> player_name -> vehicle
         self.player_battles = defaultdict(int)
         self.total_wins = 0
+        self.tank_names = tank_names  # Сохраняем словарь
+        
+    def get_vehicle_name(self, vehicle_full):
+        """
+        Возвращает игровое название танка по точному совпадению
+        Если точного совпадения нет, возвращает техническое название
+        """
+        # Извлекаем ключ из полного названия
+        # Например из "ussr:R231_Object_278" нужно получить "R231_Object_278"
+        if ':' in vehicle_full:
+            vehicle_key = vehicle_full.split(':', 1)[1]
+        else:
+            vehicle_key = vehicle_full
+        
+        # Ищем точное совпадение в словаре
+        if vehicle_key in self.tank_names:
+            return self.tank_names[vehicle_key]
+        
+        # Если точного совпадения нет, возвращаем очищенное техническое название
+        # Убираем префикс страны
+        if ':' in vehicle_full:
+            vehicle_full = vehicle_full.split(':', 1)[1]
+        
+        # Заменяем подчеркивания на пробелы
+        vehicle_full = vehicle_full.replace('_', ' ')
+        
+        return vehicle_full.strip()
         
     def extract_json_from_replay(self, replay_path):
         """Извлекает metadata и results из .mtreplay файла"""
@@ -88,6 +117,9 @@ class BattleMatrixAnalyzer:
                 continue
             
             player_name = v.get('name', 'Unknown')
+            vehicle_full = v.get('vehicleType', 'Unknown')
+            # Получаем название танка используя точное совпадение
+            vehicle = self.get_vehicle_name(vehicle_full)
             
             # Добавляем игрока в общий список
             self.players.add(player_name)
@@ -97,8 +129,9 @@ class BattleMatrixAnalyzer:
             stats = vehicles_stats.get(vid, [{}])[0]
             damage = stats.get('damageDealt', 0)
             
-            # Сохраняем урон для этого боя (даже если 0)
+            # Сохраняем урон и технику для этого боя
             self.battle_data[battle_id][player_name] = damage
+            self.battle_vehicles[battle_id][player_name] = vehicle
         
         # Увеличиваем счетчик боёв для каждого игрока в этом бою
         for player in battle_players:
@@ -163,7 +196,7 @@ class BattleMatrixAnalyzer:
             map_part = battle['map']
             headers.append(f"{date_part} {map_part}")
         
-        # Создаем данные
+        # Создаем данные с техникой
         data = []
         for player in sorted_players:
             total_damage = 0
@@ -172,7 +205,9 @@ class BattleMatrixAnalyzer:
             for battle in self.battles:
                 if player in self.battle_data[battle['id']]:
                     damage = self.battle_data[battle['id']][player]
-                    battles_list.append(damage)
+                    vehicle = self.battle_vehicles[battle['id']][player]
+                    # Форматируем ячейку как "Танк - урон"
+                    battles_list.append(f"{vehicle} - {damage}")
                     total_damage += damage
                 else:
                     battles_list.append('-')
