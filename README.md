@@ -5,9 +5,9 @@
 [![Version](https://img.shields.io/github/v/release/AleXNocS/MirTankov-ABS-Replay-Analyser)](https://github.com/AleXNocS/MirTankov-ABS-Replay-Analyser/releases/latest)
 [![Downloads](https://img.shields.io/github/downloads/AleXNocS/MirTankov-ABS-Replay-Analyser/total.svg)](https://github.com/AleXNocS/MirTankov-ABS-Replay-Analyser/releases)
 
-**Created by / Создано:**
-- **AleXNocS** – *Developer*
-- **Sk0p1 (aka panda_rez)** – *Inspiration + Motivation & Tester*
+### 👥 Авторы / Authors
+[AleXNocS](https://github.com/AleXNocS) – something like developer  
+Sk0p1 (aka panda_rez) – Inspiration+Motivation 😎 & Tester
 
 ---
 ## 🌟 Возможности / Features
@@ -167,10 +167,7 @@ The .exe version is completely standalone and portable
 .exe версия полностью автономна и портативна
 
 
-### 👥 Авторы / Authors
-[AleXNocS](https://github.com/AleXNocS) – something like developer 
 
-Sk0p1 (aka panda_rez) – Inspiration+Motivation 😎 & Tester
 
 ### 🤝 Участие в разработке / Contributing
 Contributions are welcome! Feel free to:
