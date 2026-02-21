@@ -179,7 +179,8 @@ The .exe version is completely standalone and portable
 - Отправлять pull request'ы
 ---
 ### 📄 Лицензия / License
--
+This project is licensed under the MIT License – see the LICENSE file for details.
+Этот проект лицензирован под MIT License – подробности в файле LICENSE.
 ---
 ### 🙏 Благодарности / Acknowledgements
 Thanks to the World of Tanks/Mir Tankov community  
