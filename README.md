@@ -2,6 +2,7 @@
 
 [![Python](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![Platform](https://img.shields.io/badge/platform-windows-lightgrey.svg)](https://www.microsoft.com/windows)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Version](https://img.shields.io/github/v/release/AleXNocS/MirTankov-ABS-Replay-Analyser)](https://github.com/AleXNocS/MirTankov-ABS-Replay-Analyser/releases/latest)
 [![Downloads](https://img.shields.io/github/downloads/AleXNocS/MirTankov-ABS-Replay-Analyser/total.svg)](https://github.com/AleXNocS/MirTankov-ABS-Replay-Analyser/releases)
 
