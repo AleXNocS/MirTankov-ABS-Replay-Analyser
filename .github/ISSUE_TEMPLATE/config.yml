@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 📖 Документация / Documentation
+    url: https://github.com/AleXNocS/MirTankov-ABS-Replay-Analyser#readme
+    about: Пожалуйста, сначала проверьте документацию / Please check the documentation first
+  - name: 💬 Обсуждения / Discussions
+    url: https://github.com/AleXNocS/MirTankov-ABS-Replay-Analyser/discussions
+    about: Задавайте вопросы и обсуждайте идеи здесь / Ask questions and discuss ideas here
