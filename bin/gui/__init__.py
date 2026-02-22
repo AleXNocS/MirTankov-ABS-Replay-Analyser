@@ -1,1 +1,3 @@
-from .viewer import TableViewer
+from .main_window import MainWindow
+
+__all__ = ['MainWindow']

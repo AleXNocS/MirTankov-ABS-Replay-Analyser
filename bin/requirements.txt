@@ -1,3 +1,5 @@
 # Этот файл пуст, так как используются только стандартные библиотеки Python
 # Для сборки .exe потребуется pyinstaller:
 # pip install pyinstaller
+ PyQt6==6.4.0
+ qdarkstyle==3.1

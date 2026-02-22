@@ -2,7 +2,7 @@ import json
 import csv
 from pathlib import Path
 from collections import defaultdict
-from .tank_lib import tank_names  # Импортируем словарь с названиями танков
+from .tank_lib import tank_names
 
 class BattleMatrixAnalyzer:
     def __init__(self):
@@ -12,32 +12,23 @@ class BattleMatrixAnalyzer:
         self.battle_vehicles = defaultdict(dict)  # battle_id -> player_name -> vehicle
         self.player_battles = defaultdict(int)
         self.total_wins = 0
-        self.tank_names = tank_names  # Сохраняем словарь
+        self.tank_names = tank_names
+        self.skipped_battles = 0  # Счетчик пропущенных боев (30 игроков)
+        self.processed_battles = 0  # Счетчик обработанных боев (14 игроков)
         
     def get_vehicle_name(self, vehicle_full):
-        """
-        Возвращает игровое название танка по точному совпадению
-        Если точного совпадения нет, возвращает техническое название
-        """
-        # Извлекаем ключ из полного названия
-        # Например из "ussr:R231_Object_278" нужно получить "R231_Object_278"
+        """Возвращает игровое название танка"""
         if ':' in vehicle_full:
             vehicle_key = vehicle_full.split(':', 1)[1]
         else:
             vehicle_key = vehicle_full
         
-        # Ищем точное совпадение в словаре
         if vehicle_key in self.tank_names:
             return self.tank_names[vehicle_key]
         
-        # Если точного совпадения нет, возвращаем очищенное техническое название
-        # Убираем префикс страны
         if ':' in vehicle_full:
             vehicle_full = vehicle_full.split(':', 1)[1]
-        
-        # Заменяем подчеркивания на пробелы
         vehicle_full = vehicle_full.replace('_', ' ')
-        
         return vehicle_full.strip()
         
     def extract_json_from_replay(self, replay_path):
@@ -82,6 +73,10 @@ class BattleMatrixAnalyzer:
         
         return metadata, results
     
+    def count_players_in_battle(self, vehicles_meta):
+        """Подсчитывает количество игроков в бою"""
+        return len([v for v in vehicles_meta.values() if isinstance(v, dict)])
+    
     def process_replay(self, replay_path):
         """Обрабатывает один реплей"""
         print(f"\n📁 Обработка: {Path(replay_path).name}")
@@ -96,6 +91,19 @@ class BattleMatrixAnalyzer:
         map_name = metadata.get('mapDisplayName', 'Неизвестно')
         date_time = metadata.get('dateTime', 'Неизвестно')
         
+        # Собираем всех игроков
+        vehicles_meta = metadata.get('vehicles', {})
+        
+        # Подсчитываем количество игроков
+        players_count = self.count_players_in_battle(vehicles_meta)
+        print(f"  👥 Участников в бою: {players_count}")
+        
+        # Проверяем, что это АБС режим (14 игроков - 7 на 7)
+        if players_count == 30:  # Если 30 игроков (15 на 15) - это случайный бой
+            self.skipped_battles += 1
+            print(f"  ⏭️ Пропущен случайный бой (30 участников)")
+            return False
+        
         # Создаем ID для боя
         battle_id = f"{date_time}_{map_name}"
         
@@ -104,11 +112,11 @@ class BattleMatrixAnalyzer:
             'id': battle_id,
             'date': date_time,
             'map': map_name,
-            'file': Path(replay_path).name
+            'file': Path(replay_path).name,
+            'players_count': players_count
         })
         
-        # Собираем всех игроков
-        vehicles_meta = metadata.get('vehicles', {})
+        # Получаем статистику
         vehicles_stats = results.get('vehicles', {})
         
         battle_players = set()
@@ -119,43 +127,38 @@ class BattleMatrixAnalyzer:
             
             player_name = v.get('name', 'Unknown')
             vehicle_full = v.get('vehicleType', 'Unknown')
-            # Получаем название танка используя точное совпадение
             vehicle = self.get_vehicle_name(vehicle_full)
             
-            # Добавляем игрока в общий список
             self.players.add(player_name)
             battle_players.add(player_name)
             
-            # Получаем урон
             stats = vehicles_stats.get(vid, [{}])[0]
             damage = stats.get('damageDealt', 0)
             
-            # Сохраняем урон и технику для этого боя
             self.battle_data[battle_id][player_name] = damage
             self.battle_vehicles[battle_id][player_name] = vehicle
         
-        # Увеличиваем счетчик боёв для каждого игрока в этом бою
+        # Увеличиваем счетчик боёв для каждого игрока
         for player in battle_players:
             self.player_battles[player] += 1
         
-        # Определяем исход боя для подсчета побед
+        # Определяем исход боя
         winner_team = results.get('common', {}).get('winnerTeam', 0)
         player_name = metadata.get('playerName', '')
         player_team = None
         
-        # Находим команду игрока
         for vid, v in vehicles_meta.items():
             if isinstance(v, dict) and v.get('name') == player_name:
                 player_team = v.get('team', 0)
                 break
         
-        # Если бой выигран, увеличиваем счетчик побед
         if player_team and winner_team == player_team:
             self.total_wins += 1
             outcome = "🏆 ПОБЕДА"
         else:
             outcome = "❌ ПОРАЖЕНИЕ"
         
+        self.processed_battles += 1
         print(f"  {outcome} на карте {map_name}")
         print(f"     Участников: {len(battle_players)}")
         return True
@@ -170,17 +173,20 @@ class BattleMatrixAnalyzer:
         print(f"🔍 Выбрано файлов для анализа: {len(file_paths)}")
         print(f"{'='*80}")
         
-        processed = 0
+        self.skipped_battles = 0
+        self.processed_battles = 0
+        
         for file_path in sorted(file_paths):
-            if self.process_replay(file_path):
-                processed += 1
+            self.process_replay(file_path)
         
         print(f"\n{'='*80}")
-        print(f"✅ Успешно обработано файлов: {processed}/{len(file_paths)}")
-        print(f"👥 Уникальных игроков: {len(self.players)}")
+        print(f"📊 Статистика обработки:")
+        print(f"   ✅ Обработано АБС боев (7×7): {self.processed_battles}")
+        print(f"   ⏭️ Пропущено случайных боев (15×15): {self.skipped_battles}")
+        print(f"   👥 Уникальных игроков: {len(self.players)}")
         print(f"{'='*80}")
         
-        return processed > 0
+        return self.processed_battles > 0
     
     def get_table_data(self):
         """Возвращает данные для таблицы"""
@@ -207,7 +213,6 @@ class BattleMatrixAnalyzer:
                 if player in self.battle_data[battle['id']]:
                     damage = self.battle_data[battle['id']][player]
                     vehicle = self.battle_vehicles[battle['id']][player]
-                    # Форматируем ячейку как "Танк - урон"
                     battles_list.append(f"{vehicle} - {damage}")
                     total_damage += damage
                 else:

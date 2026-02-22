@@ -1,40 +1,67 @@
 import sys
-from models.analyzer import BattleMatrixAnalyzer
-from gui.viewer import TableViewer
-from utils.file_dialog import select_files_gui
+import os
+import ctypes
+from PyQt6.QtWidgets import QApplication
+from PyQt6.QtGui import QIcon
+from gui.main_window import MainWindow
+
+def setup_taskbar_icon():
+    """Критически важно: вызывать ДО создания QApplication"""
+    if sys.platform == "win32":
+        try:
+            # Уникальный идентификатор для вашего приложения
+            # Формат: Компания.Продукт.Версия
+            myappid = 'AleXNocS.MirTankovABSReplayAnalyzer.2.0.0'
+            ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
+            print(f"✅ AppUserModelID установлен: {myappid}")
+        except Exception as e:
+            print(f"❌ Ошибка установки AppUserModelID: {e}")
+
+def get_icon_path():
+    """Возвращает путь к иконке"""
+    if getattr(sys, 'frozen', False):
+        application_path = sys._MEIPASS
+        print(f"📦 Запущено из .exe, путь: {application_path}")
+    else:
+        application_path = os.path.dirname(os.path.abspath(__file__))
+        print(f"🐍 Запущено из скрипта, путь: {application_path}")
+    
+    icon_path = os.path.join(application_path, 'icon.ico')
+    if os.path.exists(icon_path):
+        print(f"✅ Иконка найдена: {icon_path}")
+    else:
+        print(f"❌ Иконка НЕ найдена: {icon_path}")
+    
+    return icon_path if os.path.exists(icon_path) else None
 
 def main():
-    print("\n" + "=" * 60)
-    print("🎮 АНАЛИЗАТОР РЕПЛЕЕВ МИР ТАНКОВ")
-    print("=" * 60)
-    print("\n📂 Открывается окно выбора файлов...")
+    # 1. СНАЧАЛА устанавливаем AppUserModelID (это критически важно!)
+    setup_taskbar_icon()
     
-    # Выбираем файлы через проводник
-    file_paths = select_files_gui()
+    # 2. ПОТОМ создаем QApplication
+    app = QApplication(sys.argv)
+    app.setApplicationName("MirTankov ABS Replay Analyzer")
+    app.setApplicationVersion("2.0.0")
     
-    if not file_paths:
-        print("❌ Файлы не выбраны. Выход.")
-        input("\nНажмите Enter для выхода...")
-        return
+    # 3. Устанавливаем иконку для приложения
+    icon_path = get_icon_path()
+    if icon_path:
+        app_icon = QIcon(icon_path)
+        app.setWindowIcon(app_icon)
+        print("✅ Иконка установлена для приложения")
     
-    # Создаем анализатор
-    analyzer = BattleMatrixAnalyzer()
+    # 4. Создаем и показываем окно
+    window = MainWindow()
     
-    # Анализируем выбранные файлы
-    if analyzer.process_files(file_paths):
-        # Получаем данные для таблицы
-        headers, data, total_battles = analyzer.get_table_data()
-        
-        # Показываем таблицу с процентом побед
-        print("\n📊 Открывается окно с таблицей результатов...")
-        viewer = TableViewer(headers, data, total_battles, analyzer.total_wins)
-        viewer.run()
-        
-        print("\n✅ Работа завершена")
-    else:
-        print("\n❌ Не удалось обработать файлы")
+    # 5. ДОПОЛНИТЕЛЬНО устанавливаем иконку для окна
+    if icon_path:
+        window.setWindowIcon(QIcon(icon_path))
+        print("✅ Иконка установлена для окна")
     
-    # input("\nНажмите Enter для выхода...")
+    window.show()
+    print("✅ Приложение запущено")
+    
+    sys.exit(app.exec())
 
 if __name__ == "__main__":
     main()

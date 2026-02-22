@@ -1398,3 +1398,7 @@ Dual Gun
   _QF_20pdr_APC_Mk2: QF 20 APC Mk. 2
   _QF_20pdr_AP_Mk1: QF 20 AP Mk. 1
   _QF_20pdr_HE_Mk3: QF 20 HE Mk. 3
+
+
+python -m PyInstaller --onefile --windowed --icon=icon.ico --name "MirTankov_ABS_Analyzer" main.py
+python -m PyInstaller --name "MirTankov_ABS_Analyzer" --onefile --windowed --icon=icon.ico --add-data "icon.ico;." --add-data "models;models" --add-data "gui;gui" --add-data "utils;utils" --hidden-import PyQt6 --hidden-import PyQt6.QtCore --hidden-import PyQt6.QtGui --hidden-import PyQt6.QtWidgets --hidden-import qdarkstyle main.py
