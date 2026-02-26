@@ -8,7 +8,7 @@
 
 ### 👥 Авторы / Authors
 [AleXNocS](https://github.com/AleXNocS) – something like developer  
-Sk0p1 (aka panda_rez) – Inspiration+Motivation 😎 & Tester
+Sk0p1 (aka panda_rez) – Inspiration+Motivation 😎 & Tester  
 [Akatsuki Log Horizon](https://github.com/Akatsuki-Log-Horizon) Tester
 ---
 ## 🌟 Возможности / Features
