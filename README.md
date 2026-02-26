@@ -68,7 +68,7 @@ If you want to run from source code or modify the tool:
 git clone https://github.com/AleXNocS/MirTankov-ABS-Replay-Analyser.git
 cd MirTankov-ABS-Replay-Analyser
 ```
-### Project Structure
+### Project Structure OUTDATED
 ```bash
 MirTankov-ABS-Replay-Analyser/
 │
