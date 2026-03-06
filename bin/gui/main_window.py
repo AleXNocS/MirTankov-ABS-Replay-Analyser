@@ -697,12 +697,18 @@ class MainWindow(QMainWindow):
             return
         
         self.battle_clans = []
-        
+        files = sorted(files)       
+
         # Для каждого боя получаем клан соперника
-        for i, battle in enumerate(self.abs_analyzer.battles):
+        for i,battle in enumerate(self.abs_analyzer.battles):
+           # print(f"Номер i :{i}")
+           # print(f"battle :{battle}")
             if i < len(files):
                 try:
-                    clan_info = ClanExtractor.extract_opponent_clan_info(files[i])
+                    file_path = files[i]
+                    print(f"Обработка файла {i+1}: {os.path.basename(file_path)}")
+            
+                    clan_info = ClanExtractor.extract_opponent_clan_info(file_path)
                     clan_string = clan_info['clan_string']
                     is_mixed = clan_info.get('is_mixed', False)
                     

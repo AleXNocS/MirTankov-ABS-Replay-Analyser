@@ -429,7 +429,7 @@
   "Ltraktor": "L.Tr.",
   "MarderII": "Marder II",
   "Marder_III": "Marder 38T",
-  "Maus": "Maus",
+  
   "Maybach_HL_190": "Maybach HL 190",
   "Maybach_HL_210_TRM_P30L": "Argus 12LD330HL",
   "Maybach_HL_234P60_02": "Maybach Neues Projekt F",
@@ -976,5 +976,6 @@
   "R45_IS-7" : "ИС-7",
   "A69_T110E5" : "T1110E5",
   "G56_E-100" : "E 100",
-  "R97_Object_140": "Об. 140"
+  "R97_Object_140": "Об. 140",
+  "G42_Maus": "Maus"
 }
