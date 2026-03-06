@@ -11,6 +11,7 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QAction, QFont
+from PyQt6.QtGui import QAction, QFont, QColor
 import qdarkstyle
 
 # Добавляем путь к родительской папке для импорта моделей
@@ -18,6 +19,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from models.analyzer import BattleMatrixAnalyzer
 from models.analyzer_random import RandomBattleAnalyzer
 from utils.file_dialog import select_files_gui
+from utils.clan_extractor import ClanExtractor  # Добавляем импорт для кланов
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -26,6 +28,7 @@ class MainWindow(QMainWindow):
         self.random_analyzer = None
         self.current_mode = "abs"  # "abs" или "random"
         self.current_abs_data = []  # Сохраняем текущие данные АБС режима для сброса
+        self.battle_clans = []  # Список кланов для каждого боя
         
         self.init_ui()
         self.apply_dark_theme()
@@ -196,7 +199,17 @@ class MainWindow(QMainWindow):
     
     def apply_dark_theme(self):
         """Применяет темную тему через qdarkstyle"""
-        self.setStyleSheet(qdarkstyle.load_stylesheet_pyqt6())
+        try:
+            # Пробуем разные варианты для разных версий qdarkstyle
+            if hasattr(qdarkstyle, 'load_stylesheet_pyqt6'):
+                self.setStyleSheet(qdarkstyle.load_stylesheet_pyqt6())
+            elif hasattr(qdarkstyle, 'load_stylesheet'):
+                self.setStyleSheet(qdarkstyle.load_stylesheet())
+            else:
+                # Если ничего не работает, просто игнорируем
+                print("⚠️ Не удалось загрузить темную тему")
+        except Exception as e:
+            print(f"⚠️ Ошибка при загрузке темной темы: {e}")
     
     def set_mode(self, mode):
         """Устанавливает режим работы"""
@@ -233,19 +246,32 @@ class MainWindow(QMainWindow):
         
         headers, data, total_battles = self.abs_analyzer.get_table_data()
         self.current_abs_data = data.copy()
-        self.current_abs_headers = headers.copy()
         self.total_battles = total_battles
         total_wins = self.abs_analyzer.total_wins
         
         win_percentage = (total_wins / total_battles * 100) if total_battles > 0 else 0
         
-        # Добавляем информацию о пропущенных боях
-        info_text = f"🎮 АБС боев: {total_battles}  |  🏆 Побед: {total_wins} ({win_percentage:.1f}%)"
+        # Подсчитываем статистику по кланам
+        clan_stats = {'clan': 0, 'mixed': 0, 'none': 0}
+        for battle in self.abs_analyzer.battles:
+            clan_info = battle.get('clan_info', {})
+            if not clan_info.get('clan') or clan_info.get('clan') == '?':
+                clan_stats['none'] += 1
+            elif clan_info.get('is_mixed'):
+                clan_stats['mixed'] += 1
+            else:
+                clan_stats['clan'] += 1
+        
+        # Добавляем информацию о пропущенных боях и кланах
+        info_text = (f"🎮 АБС боев: {total_battles}  |  🏆 Побед: {total_wins} ({win_percentage:.1f}%)  |  "
+                    f"🏷️ Клановые: {clan_stats['clan']}  |  ⚔️ Сборные: {clan_stats['mixed']}")
+        
         if self.abs_analyzer.skipped_battles > 0:
             info_text += f"  |  ⏭️ Пропущено: {self.abs_analyzer.skipped_battles}"
         
         self.info_label.setText(info_text)
         
+        # Заполняем таблицу с новыми заголовками
         self.populate_table_abs(headers, data)
         self.reset_search_btn.setEnabled(True)
     
@@ -265,41 +291,16 @@ class MainWindow(QMainWindow):
         )
         
         self.populate_table_random(headers, data)
-    
-    def populate_table_abs(self, headers, data):
-        """Заполняет таблицу для АБС режима"""
-        self.table.clear()
-        self.table.setRowCount(len(data))
-        self.table.setColumnCount(len(headers))
-        self.table.setHorizontalHeaderLabels(headers)
-        
-        # Отключаем сигналы сортировки временно
-        self.table.setSortingEnabled(False)
-        
-        for row, row_data in enumerate(data):
-            for col, value in enumerate(row_data):
-                item = QTableWidgetItem(str(value))
-                if col == 0:
-                    item.setTextAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
-                else:
-                    item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-                self.table.setItem(row, col, item)
-        
-        self.table.resizeColumnsToContents()
-        for col in range(3, len(headers)):
-            if self.table.columnWidth(col) > 300:
-                self.table.setColumnWidth(col, 300)
-    
-        # Включаем сортировку обратно
-        self.table.setSortingEnabled(True)
 
-    
     def populate_table_random(self, headers, data):
-        """Заполняет таблицу для случайного режима"""
+        """Заполняет таблицу для случайного режима с подгонкой под заголовки"""
         self.table.clear()
         self.table.setRowCount(len(data))
         self.table.setColumnCount(len(headers))
         self.table.setHorizontalHeaderLabels(headers)
+        
+        # Отключаем сортировку временно
+        self.table.setSortingEnabled(False)
         
         for row, row_data in enumerate(data):
             for col, value in enumerate(row_data):
@@ -307,10 +308,244 @@ class MainWindow(QMainWindow):
                 item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
                 self.table.setItem(row, col, item)
         
+        # Сначала подгоняем все столбцы под содержимое
         self.table.resizeColumnsToContents()
+        
+        # Теперь настраиваем каждый столбец
         for col in range(len(headers)):
-            if self.table.columnWidth(col) > 150:
-                self.table.setColumnWidth(col, 150)
+            # Получаем ширину по содержимому
+            content_width = self.table.columnWidth(col)
+            
+            # Получаем ширину заголовка
+            header_text = headers[col]
+            # Примерная ширина текста (примерно 7 пикселей на символ)
+            header_width = len(header_text) * 15
+            
+            # Берем максимальную ширину из содержимого и заголовка
+            final_width = max(content_width, header_width)
+            
+            # Для последнего столбца (дата и карта) оставляем как есть
+            if col == len(headers) - 1:
+                # Не ограничиваем последний столбец
+                self.table.setColumnWidth(col, final_width)
+            else:
+                # Для остальных столбцов ограничиваем до 150
+                if final_width > 150:
+                    self.table.setColumnWidth(col, 150)
+                else:
+                    self.table.setColumnWidth(col, final_width)
+        
+        # Включаем сортировку
+        self.table.setSortingEnabled(True)        
+    
+    def populate_table_abs(self, headers, data):
+        """Заполняет таблицу для АБС режима с отображением времени, карты, клана и результата"""
+        self.table.clear()
+        self.table.setRowCount(len(data))
+        
+        # Создаем новые заголовки (добавляем колонку с процентом выживания)
+        new_headers = ['Игрок', 'Ср.урон', 'Боёв', '% Выживания']
+        
+        for i, battle in enumerate(self.abs_analyzer.battles):
+            date_part = battle['date'][:16]
+            map_part = battle['map']
+            
+            # Получаем информацию о клане
+            clan_info = battle.get('clan_info', {})
+            clan = clan_info.get('clan', '?')
+            is_mixed = clan_info.get('is_mixed', False)
+            
+            # Формируем отображение клана
+            if is_mixed:
+                clan_display = f"⚔️ {clan}"
+            else:
+                clan_display = f"🏷️ {clan}"
+            
+            # Определяем результат боя
+            # Нам нужно знать, победил ли владелец в этом бою
+            # Для этого нужно найти ID владельца и его команду
+            owner_name = None
+            owner_team = None
+            winner_team = None
+            
+            # Получаем имя владельца из первого боя (оно одинаковое для всех)
+            if hasattr(self.abs_analyzer, 'battles') and len(self.abs_analyzer.battles) > 0:
+                # Здесь нужно получить информацию о победителе из данных боя
+                # Пока используем заглушку - будем брать из battle если есть
+                pass
+            
+            # Эмодзи для результата
+            is_win = battle.get('is_win', False)
+            result_emoji = "🏆" if is_win else "💔"
+            
+            # Создаем заголовок из четырех строк
+            header_text = f"{date_part}\n{map_part} - {result_emoji}\n{clan_display}"
+            new_headers.append(header_text)
+        
+        self.table.setColumnCount(len(new_headers))
+        self.table.setHorizontalHeaderLabels(new_headers)
+        
+        # Увеличиваем высоту заголовков для четырех строк
+        self.table.horizontalHeader().setDefaultSectionSize(150)
+        self.table.horizontalHeader().setMinimumHeight(100)  # Увеличили до 100
+        
+        # Отключаем сортировку временно
+        self.table.setSortingEnabled(False)
+        
+        # Заполняем данные
+        for row, row_data in enumerate(data):
+            player_name = row_data[0]  # Имя игрока из первого столбца
+            
+            # Считаем количество выживаний для игрока
+            total_battles = 0
+            survived_battles = 0
+            
+            for battle in self.abs_analyzer.battles:
+                battle_id = battle['id']
+                if player_name in self.abs_analyzer.battle_data[battle_id]:
+                    total_battles += 1
+                    if hasattr(self.abs_analyzer, 'battle_health'):
+                        health = self.abs_analyzer.battle_health.get(battle_id, {}).get(player_name, 0)
+                        if health > 0:
+                            survived_battles += 1
+            
+            # Рассчитываем процент выживания
+            survival_rate = (survived_battles / total_battles * 100) if total_battles > 0 else 0
+            
+            for col, value in enumerate(row_data):
+                if col == 0:  # Имя игрока
+                    item = QTableWidgetItem(str(value))
+                    item.setTextAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+                    self.table.setItem(row, col, item)
+                
+                elif col == 1:  # Средний урон
+                    item = QTableWidgetItem(str(value))
+                    item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                    self.table.setItem(row, col, item)
+                
+                elif col == 2:  # Количество боев
+                    item = QTableWidgetItem(str(value))
+                    item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                    self.table.setItem(row, col, item)
+                
+                else:  # Столбцы с данными по боям (индекс 3 и дальше)
+                    # В цикле заполнения данных для col >= 3:
+                    # В цикле заполнения данных для col >= 3:
+                    battle_index = col - 3
+                    if battle_index < len(self.abs_analyzer.battles):
+                        battle = self.abs_analyzer.battles[battle_index]
+                        battle_id = battle['id']
+                        
+                        # Получаем здоровье, убийства игрока в этом бою
+                        health = 0
+                        kills = 0
+                        
+                        if hasattr(self.abs_analyzer, 'battle_health'):
+                            health = self.abs_analyzer.battle_health.get(battle_id, {}).get(player_name, 0)
+                        if hasattr(self.abs_analyzer, 'battle_kills'):
+                            kills = self.abs_analyzer.battle_kills.get(battle_id, {}).get(player_name, 0)
+                        
+                        # Проверяем тип value (может быть словарем или строкой '-')
+                        if value == '-':
+                            display_text = '-'
+                        else:
+                            # Извлекаем танк и урон из словаря
+                            tank = value.get('vehicle', '')
+                            damage = value.get('damage', 0)
+                            
+                            
+                            
+                            # Первая строка: статус + танк
+                            if health > 0:
+                                status_emoji = "✅"
+                            else:
+                                status_emoji = "💀"
+                            
+                            line1 = f"{status_emoji} {tank}"
+                            
+                            # Вторая строка: урон и убийства
+                            if kills > 0:
+                                line2 = f"{damage} 🔪{kills}"
+                            else:
+                                line2 = str(damage)
+                            
+                            display_text = f"{line1}\n{line2}"
+                        
+                        item = QTableWidgetItem(display_text)
+                        item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                        
+                        # Увеличиваем высоту строки для двухстрочного текста
+                        current_height = self.table.rowHeight(row)
+                        if current_height < 50:
+                            self.table.setRowHeight(row, 50)
+                        
+                        # Добавляем тултип с полной информацией
+                        if value != '-':
+                            tooltip = f"Техника: {tank}\nУрон: {damage}\nЗдоровье: {health} HP\nУбийств: {kills}"
+                            item.setToolTip(tooltip)
+                        
+                        self.table.setItem(row, col + 1, item)
+        
+        # Добавляем процент выживания в отдельную колонку (индекс 3)
+        for row, row_data in enumerate(data):
+            player_name = row_data[0]
+            
+            # Считаем количество выживаний для игрока
+            total_battles = 0
+            survived_battles = 0
+            
+            for battle in self.abs_analyzer.battles:
+                battle_id = battle['id']
+                if player_name in self.abs_analyzer.battle_data[battle_id]:
+                    total_battles += 1
+                    if hasattr(self.abs_analyzer, 'battle_health'):
+                        health = self.abs_analyzer.battle_health.get(battle_id, {}).get(player_name, 0)
+                        if health > 0:
+                            survived_battles += 1
+            
+            # Рассчитываем процент выживания
+            survival_rate = (survived_battles / total_battles * 100) if total_battles > 0 else 0
+            
+            # Форматируем отображение
+            survival_text = f"{survival_rate:.1f}%"
+            survival_item = QTableWidgetItem(survival_text)
+            survival_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+            
+            # Добавляем цветовую индикацию
+            if survival_rate >= 70:
+                survival_item.setForeground(QColor("#4CAF50"))  # Зеленый для высокого выживания
+            elif survival_rate >= 40:
+                survival_item.setForeground(QColor("#FFC107"))  # Желтый для среднего
+            else:
+                survival_item.setForeground(QColor("#FF6B6B"))  # Красный для низкого
+            
+            # Добавляем тултип
+            survival_item.setToolTip(f"Выжил в {survived_battles} из {total_battles} боев")
+            
+            self.table.setItem(row, 3, survival_item)
+        
+        # Подгоняем ширину столбцов
+        self.table.resizeColumnsToContents()
+        
+        # Настраиваем ширину столбцов с данными боев
+        for col in range(4, len(new_headers)):  # Начинаем с 4, потому что добавили колонку выживания
+            current_width = self.table.columnWidth(col)
+            if current_width < 120:
+                self.table.setColumnWidth(col, 120)
+            elif current_width > 250:
+                self.table.setColumnWidth(col, 250)
+        
+        # Настраиваем первые четыре столбца
+        self.table.resizeColumnToContents(0)  # Игрок
+        if self.table.columnWidth(0) > 200:
+            self.table.setColumnWidth(0, 200)
+        
+        self.table.setColumnWidth(1, 80)   # Ср.урон
+        self.table.setColumnWidth(2, 60)   # Боёв
+        self.table.setColumnWidth(3, 110)  # % Выживания
+        
+        # Включаем сортировку
+        self.table.setSortingEnabled(True)
     
     def filter_table(self, text):
         """Фильтрует таблицу по тексту (только для АБС режима)"""
@@ -345,7 +580,9 @@ class MainWindow(QMainWindow):
         
         # Полностью перезаполняем таблицу исходными данными
         if self.current_abs_data is not None:
-            self.populate_table_abs(self.current_abs_headers, self.current_abs_data)
+            # Нужно получить свежие заголовки из анализатора
+            headers, _, _ = self.abs_analyzer.get_table_data()
+            self.populate_table_abs(headers, self.current_abs_data)
         
         self.filter_stats_label.clear()
         self.status_bar.showMessage("🔄 Поиск сброшен")
@@ -371,6 +608,9 @@ class MainWindow(QMainWindow):
                 self.abs_analyzer = BattleMatrixAnalyzer()
                 
                 if self.abs_analyzer.process_files(files):
+                    # Добавляем информацию о кланах в заголовки
+                    self.add_clan_info_to_headers(files)
+                    
                     self.display_abs_data()
                     self.save_btn.setEnabled(True)
                     
@@ -449,6 +689,52 @@ class MainWindow(QMainWindow):
             self.select_btn.setText("📂 Выбрать файлы")
             QApplication.processEvents()
     
+    def add_clan_info_to_headers(self, files):
+        """
+        Добавляет информацию о кланах и результате в заголовки таблицы
+        """
+        if not self.abs_analyzer or not self.abs_analyzer.battles:
+            return
+        
+        self.battle_clans = []
+        
+        # Для каждого боя получаем клан соперника
+        for i, battle in enumerate(self.abs_analyzer.battles):
+            if i < len(files):
+                try:
+                    clan_info = ClanExtractor.extract_opponent_clan_info(files[i])
+                    clan_string = clan_info['clan_string']
+                    is_mixed = clan_info.get('is_mixed', False)
+                    
+                    # Получаем результат боя из battle объекта
+                    is_win = battle.get('is_win', False)
+                    
+                    # Сохраняем информацию о клане и результате
+                    battle_info = {
+                        'clan': clan_string,
+                        'is_mixed': is_mixed,
+                        'is_win': is_win,
+                        'full_info': clan_info
+                    }
+                    self.battle_clans.append(battle_info)
+                    battle['clan_info'] = battle_info
+                    
+                    # Выводим в консоль для отладки
+                    icon = "⚔️" if is_mixed else "🏷️"
+                    result_icon = "🏆" if is_win else "💔"
+                    print(f"  {icon} {result_icon} Бой {i+1}: {clan_string}")
+                    
+                except Exception as e:
+                    print(f"Ошибка получения клана для боя {i}: {e}")
+                    battle_info = {
+                        'clan': '?',
+                        'is_mixed': False,
+                        'is_win': False,
+                        'full_info': {}
+                    }
+                    self.battle_clans.append(battle_info)
+                    battle['clan_info'] = battle_info
+    
     def save_csv(self):
         """Сохраняет данные в CSV"""
         analyzer = self.abs_analyzer if self.current_mode == "abs" else self.random_analyzer
@@ -476,7 +762,7 @@ class MainWindow(QMainWindow):
             self,
             "О программе",
             "<h2>🎮 MirTankov ABS Replay Analyzer</h2>"
-            "<p><b>Версия:</b> 2.0.0</p>"
+            "<p><b>Версия:</b> 3.0.0</p>"
             "<p><b>Авторы:</b></p>"
             "<ul>"
             "<li>AleXNocS – Developer</li>"

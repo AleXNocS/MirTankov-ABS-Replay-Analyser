@@ -131,18 +131,12 @@ python main.py
 # Установите pyinstaller
 pip install pyinstaller
 
-# Соберите .exe с иконкой
-python -m PyInstaller --onefile --windowed --icon=icon.ico --name "MirTankov_ABS_Analyzer" main.py
+# Соберите .exe 
+pyinstaller --name "MirTankov_ABS_Analyzer" --onefile --windowed --icon=icon.ico --add-data "icon.ico;." --add-data "models;models" --add-data "gui;gui" --add-data "utils;utils" --hidden-import PyQt6 --hidden-import PyQt6.QtCore --hidden-import PyQt6.QtGui --hidden-import PyQt6.QtWidgets --hidden-import qdarkstyle main.py
 # Готовый .exe файл появится в папке 'dist'
 ```
 ---
 
-### 📁 Формат вывода / Output format
-CSV Structure / Структура CSV
-```text
-Игрок	Ср.урон	Боёв	19.02.2026 20:55 Жемчужная река	19.02.2026 21:10 Химмельсдорф	...
-Player1	2500	10	                2800	                   3200	                  ...
-Player2	1800	8	                   -                       1950	                  ...
 ```
 ### 🛠️ Требования / Requirements
 **For .exe version / Для .exe версии**  

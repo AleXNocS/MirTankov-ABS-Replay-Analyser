@@ -1,0 +1,9 @@
+**/*.pyc
+**/*.mtreplay
+**/*.toc
+bin/gui/__pycache__/
+bin/models/__pycache__/
+bin/utils/__pycache__/
+vehicles/
+
+MirTankov-ABS-Replay-Analyser.code-workspace

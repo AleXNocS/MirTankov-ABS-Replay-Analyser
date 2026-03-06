@@ -2,7 +2,6 @@ import json
 import csv
 from pathlib import Path
 from collections import defaultdict
-from .tank_lib import tank_names
 
 class RandomBattleAnalyzer:
     """
@@ -16,22 +15,43 @@ class RandomBattleAnalyzer:
         self.player_stats = []  # Статистика по боям для игрока
         self.battles = []       # Информация о боях
         self.total_wins = 0
-        self.tank_names = tank_names
         
-    def get_vehicle_name(self, vehicle_full):
-        """Возвращает игровое название танка"""
+        # Загружаем короткие названия танков
+        self.tank_short_names = self.load_tank_names()
+    
+    def load_tank_names(self):
+        """Загружает короткие названия танков из JSON"""
+        json_path = Path(__file__).parent / 'tank_short_names.json'
+        try:
+            with open(json_path, 'r', encoding='utf-8') as f:
+                names = json.load(f)
+            print(f"✅ Загружено {len(names)} коротких названий танков")
+            return names
+        except FileNotFoundError:
+            print(f"⚠️ Файл {json_path} не найден. Используем базовые названия.")
+            return {}
+        except Exception as e:
+            print(f"⚠️ Ошибка при загрузке названий танков: {e}")
+            return {}
+    
+    def get_vehicle_short_name(self, vehicle_full):
+        """
+        Возвращает короткое название танка
+        vehicle_full может быть в формате "france:F108_Panhard_EBR_105" или "F108_Panhard_EBR_105"
+        """
         if ':' in vehicle_full:
             vehicle_key = vehicle_full.split(':', 1)[1]
         else:
             vehicle_key = vehicle_full
         
-        if vehicle_key in self.tank_names:
-            return self.tank_names[vehicle_key]
+        # Ищем в словаре коротких названий
+        if vehicle_key in self.tank_short_names:
+            return self.tank_short_names[vehicle_key]
         
-        if ':' in vehicle_full:
-            vehicle_full = vehicle_full.split(':', 1)[1]
-        vehicle_full = vehicle_full.replace('_', ' ')
-        return vehicle_full.strip()
+        # Если не нашли, возвращаем очищенное название
+        if '_' in vehicle_key:
+            return vehicle_key.replace('_', ' ')
+        return vehicle_key
     
     def extract_json_from_replay(self, replay_path):
         """Извлекает metadata и results из .mtreplay файла"""
@@ -119,9 +139,9 @@ class RandomBattleAnalyzer:
                 player_found = True
                 stats = vehicles_stats.get(vid, [{}])[0]
                 
-                # Получаем название танка
+                # Получаем короткое название танка
                 vehicle_full = v.get('vehicleType', 'Unknown')
-                vehicle = self.get_vehicle_name(vehicle_full)
+                vehicle = self.get_vehicle_short_name(vehicle_full)
                 
                 # Собираем всю статистику
                 player_data = {
@@ -137,7 +157,8 @@ class RandomBattleAnalyzer:
                     'piercings': stats.get('piercings', 0),
                     'xp': stats.get('xp', 0),
                     'damage_blocked': stats.get('damageBlockedByArmor', 0),
-                    'damage_received': stats.get('damageReceived', 0)
+                    'damage_received': stats.get('damageReceived', 0),
+                    'health': stats.get('health', 0)
                 }
                 
                 # Рассчитываем точность
@@ -201,7 +222,7 @@ class RandomBattleAnalyzer:
     def get_table_data(self):
         """Возвращает данные для таблицы в формате для случайных боев"""
         if not self.player_stats:
-            return [], [], 0
+            return [], [], 0, 0
         
         # Сортируем бои по дате
         self.player_stats.sort(key=lambda x: x['date'])
@@ -221,7 +242,7 @@ class RandomBattleAnalyzer:
             # Форматируем точность
             accuracy = f"{battle['accuracy']:.1f}"
             
-            # Форматируем дату и карту
+            # Формируем дату и карту
             date_map = f"{battle['date'][:16]} {battle['map']}"
             
             row = [

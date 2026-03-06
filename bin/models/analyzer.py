@@ -2,35 +2,57 @@ import json
 import csv
 from pathlib import Path
 from collections import defaultdict
-from .tank_lib import tank_names
 
 class BattleMatrixAnalyzer:
     def __init__(self):
         self.players = set()
         self.battles = []
         self.battle_data = defaultdict(dict)      # battle_id -> player_name -> damage
-        self.battle_vehicles = defaultdict(dict)  # battle_id -> player_name -> vehicle
+        self.battle_vehicles = defaultdict(dict)  # battle_id -> player_name -> vehicle (short name)
+        self.battle_health = defaultdict(dict)    # battle_id -> player_name -> health
+        self.battle_kills = defaultdict(dict)     # battle_id -> player_name -> kills
         self.player_battles = defaultdict(int)
         self.total_wins = 0
-        self.tank_names = tank_names
         self.skipped_battles = 0  # Счетчик пропущенных боев (30 игроков)
         self.processed_battles = 0  # Счетчик обработанных боев (14 игроков)
         
-    def get_vehicle_name(self, vehicle_full):
-        """Возвращает игровое название танка"""
+        # Загружаем короткие названия танков
+        self.tank_short_names = self.load_tank_names()
+    
+    def load_tank_names(self):
+        """Загружает короткие названия танков из JSON"""
+        json_path = Path(__file__).parent / 'tank_short_names.json'
+        try:
+            with open(json_path, 'r', encoding='utf-8') as f:
+                names = json.load(f)
+            print(f"✅ Загружено {len(names)} коротких названий танков")
+            return names
+        except FileNotFoundError:
+            print(f"⚠️ Файл {json_path} не найден. Используем базовые названия.")
+            return {}
+        except Exception as e:
+            print(f"⚠️ Ошибка при загрузке названий танков: {e}")
+            return {}
+    
+    def get_vehicle_short_name(self, vehicle_full):
+        """
+        Возвращает короткое название танка
+        vehicle_full может быть в формате "france:F108_Panhard_EBR_105" или "F108_Panhard_EBR_105"
+        """
         if ':' in vehicle_full:
             vehicle_key = vehicle_full.split(':', 1)[1]
         else:
             vehicle_key = vehicle_full
         
-        if vehicle_key in self.tank_names:
-            return self.tank_names[vehicle_key]
+        # Ищем в словаре коротких названий
+        if vehicle_key in self.tank_short_names:
+            return self.tank_short_names[vehicle_key]
         
-        if ':' in vehicle_full:
-            vehicle_full = vehicle_full.split(':', 1)[1]
-        vehicle_full = vehicle_full.replace('_', ' ')
-        return vehicle_full.strip()
-        
+        # Если не нашли, возвращаем очищенное название
+        if '_' in vehicle_key:
+            return vehicle_key.replace('_', ' ')
+        return vehicle_key
+    
     def extract_json_from_replay(self, replay_path):
         """Извлекает metadata и results из .mtreplay файла"""
         try:
@@ -127,16 +149,22 @@ class BattleMatrixAnalyzer:
             
             player_name = v.get('name', 'Unknown')
             vehicle_full = v.get('vehicleType', 'Unknown')
-            vehicle = self.get_vehicle_name(vehicle_full)
+            
+            # Получаем короткое название танка
+            vehicle_short = self.get_vehicle_short_name(vehicle_full)
             
             self.players.add(player_name)
             battle_players.add(player_name)
             
             stats = vehicles_stats.get(vid, [{}])[0]
             damage = stats.get('damageDealt', 0)
+            health = stats.get('health', 0)
+            kills = stats.get('kills', 0)
             
             self.battle_data[battle_id][player_name] = damage
-            self.battle_vehicles[battle_id][player_name] = vehicle
+            self.battle_vehicles[battle_id][player_name] = vehicle_short
+            self.battle_health[battle_id][player_name] = health
+            self.battle_kills[battle_id][player_name] = kills
         
         # Увеличиваем счетчик боёв для каждого игрока
         for player in battle_players:
@@ -146,6 +174,7 @@ class BattleMatrixAnalyzer:
         winner_team = results.get('common', {}).get('winnerTeam', 0)
         player_name = metadata.get('playerName', '')
         player_team = None
+        is_win = False
         
         for vid, v in vehicles_meta.items():
             if isinstance(v, dict) and v.get('name') == player_name:
@@ -154,9 +183,15 @@ class BattleMatrixAnalyzer:
         
         if player_team and winner_team == player_team:
             self.total_wins += 1
+            is_win = True
             outcome = "🏆 ПОБЕДА"
         else:
             outcome = "❌ ПОРАЖЕНИЕ"
+        
+        # Добавляем результат боя
+        self.battles[-1]['is_win'] = is_win
+        self.battles[-1]['winner_team'] = winner_team
+        self.battles[-1]['player_team'] = player_team
         
         self.processed_battles += 1
         print(f"  {outcome} на карте {map_name}")
@@ -203,7 +238,7 @@ class BattleMatrixAnalyzer:
             map_part = battle['map']
             headers.append(f"{date_part} {map_part}")
         
-        # Создаем данные с техникой
+        # Создаем данные
         data = []
         for player in sorted_players:
             total_damage = 0
@@ -213,7 +248,11 @@ class BattleMatrixAnalyzer:
                 if player in self.battle_data[battle['id']]:
                     damage = self.battle_data[battle['id']][player]
                     vehicle = self.battle_vehicles[battle['id']][player]
-                    battles_list.append(f"{vehicle} - {damage}")
+                    # Сохраняем как словарь вместо строки
+                    battles_list.append({
+                        'vehicle': vehicle,
+                        'damage': damage
+                    })
                     total_damage += damage
                 else:
                     battles_list.append('-')
@@ -233,7 +272,16 @@ class BattleMatrixAnalyzer:
         with open(filename, 'w', encoding='utf-8', newline='') as f:
             writer = csv.writer(f)
             writer.writerow(headers)
-            writer.writerows(data)
+            
+            for row in data:
+                csv_row = []
+                for cell in row:
+                    if isinstance(cell, dict):
+                        # Для словарей с техникой и уроном
+                        csv_row.append(f"{cell['vehicle']} - {cell['damage']}")
+                    else:
+                        csv_row.append(str(cell))
+                writer.writerow(csv_row)
         
         print(f"\n💾 Матрица боев экспортирована в {filename}")
         return True
