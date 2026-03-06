@@ -33,7 +33,7 @@ Sk0p1 (aka panda_rez) – Inspiration+Motivation 😎 & Tester
 
 #### Русский
 1. **Скачайте готовую программу:**
-   - Перейдите на страницу [Releases](https://github.com/AleXNocS/MirTankov-ABS-Replay-Analyser/releases)
+   - Перейдите на страницу [Releases](https://github.com/AleXNocS/MirTankov-ABS-Replay-Analyser/releases/latest)
    - Скачайте `MirTankov_ABS_Analyzer.exe`
    - Запустите файл – **Python не требуется!**
 
@@ -56,6 +56,14 @@ Sk0p1 (aka panda_rez) – Inspiration+Motivation 😎 & Tester
    - Click "Сохранить в CSV" (Save to CSV) to export data
 
 ---
+## Примеры 
+### Анализ АСБ 🏆
+![Пример анализа АСБ](./images/ReadME_images/abs_results_example_1.png)
+### Анализ Рандома 🎲
+![Пример анализа Случайных боев](./images/ReadME_images/random_results_example_1.png)
+
+
+---
 
 ## 🐍 **Для разработчиков / For developers**
 
@@ -68,21 +76,48 @@ If you want to run from source code or modify the tool:
 git clone https://github.com/AleXNocS/MirTankov-ABS-Replay-Analyser.git
 cd MirTankov-ABS-Replay-Analyser
 ```
-### Project Structure OUTDATED
-```bash
+## 📁 Структура проекта / Project Structure
+```markdown
 MirTankov-ABS-Replay-Analyser/
 │
-├── main.py                 # Entry point
-├── models/
-│   ├── __init__.py
-│   └── analyzer.py         # BattleMatrixAnalyzer class
-├── gui/
-│   ├── __init__.py
-│   └── viewer.py           # TableViewer class
-├── utils/
-│   ├── __init__.py
-│   └── file_dialog.py      # File selection dialog
-└── requirements.txt        # Dependencies (empty - uses only standard library)
+├── .gitignore # Игнорируемые файлы Git / Git ignore file
+│
+├── bin/ # Исполняемая версия / Executable version
+│ ├── main.py # Запуск из bin
+│ ├── icon.ico # Иконка для bin версии
+│ ├── MirTankov_ABS_Analyzer.spec # Спецификация для сборки
+│ ├── requirements.txt # Зависимости для bin версии
+│ ├── test.py # Тесты
+│ ├── parse_all_short_names.py # Парсер названий танков
+│ │
+│ ├── gui/ # GUI компоненты bin версии
+│ │ ├── init.py
+│ │ └── main_window.py # Главное окно
+│ │
+│ ├── models/ # Модели данных bin версии
+│ │ ├── init.py
+│ │ ├── analyzer.py # Анализатор АСБ
+│ │ ├── analyzer_random.py # Анализатор рандома
+│ │ └── tank_short_names.json # Словарь названий танков
+│ │
+│ └── utils/ # Утилиты bin версии
+│ ├── init.py
+│ ├── clan_extractor.py # Извлечение данных о кланах
+│ └── file_dialog.py # Диалоги выбора файлов
+│
+├── images/ # Изображения для документации
+│ └── ReadME_images/ # Скриншоты для README
+│ ├── abs_results_example_1.png
+│ └── random_results_example_1.png
+│
+│
+├── CODE_OF_CONDUCT.md # Правила поведения
+├── CONTRIBUTING.md # Руководство для контрибьюторов
+├── LICENSE # Лицензия MIT
+├── PULL_REQUEST_TEMPLATE.md # Шаблон PR
+├── SECURITY.md # Политика безопасности
+├── MirTankov-ABS-Replay-Analyser.code-workspace # Файл рабочей области VS Code
+└── README.md # Этот файл
 ```
 Run from source
 ```bash
