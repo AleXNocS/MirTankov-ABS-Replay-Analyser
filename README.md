@@ -56,6 +56,14 @@ Sk0p1 (aka panda_rez) – Inspiration+Motivation 😎 & Tester
    - Click "Сохранить в CSV" (Save to CSV) to export data
 
 ---
+## Примеры 
+### Анализ АСБ 🏆
+![Пример анализа АСБ](./images/ReadME_images/abs_results_example_1.png)
+### Анализ Рандома 🎲
+![Пример анализа Случайных боев](./images/ReadME_images/random_results_example_1.png)
+
+
+---
 
 ## 🐍 **Для разработчиков / For developers**
 
