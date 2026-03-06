@@ -33,7 +33,7 @@ Sk0p1 (aka panda_rez) – Inspiration+Motivation 😎 & Tester
 
 #### Русский
 1. **Скачайте готовую программу:**
-   - Перейдите на страницу [Releases](https://github.com/AleXNocS/MirTankov-ABS-Replay-Analyser/releases)
+   - Перейдите на страницу [Releases](https://github.com/AleXNocS/MirTankov-ABS-Replay-Analyser/releases/latest)
    - Скачайте `MirTankov_ABS_Analyzer.exe`
    - Запустите файл – **Python не требуется!**
 
