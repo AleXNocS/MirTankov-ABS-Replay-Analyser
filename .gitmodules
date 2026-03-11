@@ -1,0 +1,3 @@
+[submodule "libs/replays_unpack"]
+	path = libs/replays_unpack
+	url = https://github.com/Monstrofil/replays_unpack
