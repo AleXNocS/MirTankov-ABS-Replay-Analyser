@@ -11,7 +11,7 @@ def setup_taskbar_icon():
         try:
             # Уникальный идентификатор для вашего приложения
             # Формат: Компания.Продукт.Версия
-            myappid = 'AleXNocS.MirTankovABSReplayAnalyzer.2.0.0'
+            myappid = 'AleXNocS.MirTankovABSReplayAnalyzer.3.1.0'
             ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
             print(f"✅ AppUserModelID установлен: {myappid}")
         except Exception as e:
@@ -41,7 +41,7 @@ def main():
     # 2. ПОТОМ создаем QApplication
     app = QApplication(sys.argv)
     app.setApplicationName("MirTankov ABS Replay Analyzer")
-    app.setApplicationVersion("2.0.0")
+    app.setApplicationVersion("3.1.0")
     
     # 3. Устанавливаем иконку для приложения
     icon_path = get_icon_path()

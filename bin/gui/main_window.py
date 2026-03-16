@@ -764,7 +764,7 @@ class MainWindow(QMainWindow):
             self,
             "О программе",
             "<h2>🎮 MirTankov ABS Replay Analyzer</h2>"
-            "<p><b>Версия:</b> 3.0.0</p>"
+            "<p><b>Версия:</b> 3.1.0</p>"
             "<p><b>Авторы:</b></p>"
             "<ul>"
             "<li>AleXNocS – Developer</li>"
