@@ -8,3 +8,4 @@ vehicles/
 .claude/*
 MirTankov-ABS-Replay-Analyser.code-workspace
 
+bin/dist/MirTankov_ABS_Analyzer.exe
