@@ -16,3 +16,5 @@ greenlet==3.3.2  # Для SQLAlchemy
 PyQt6_sip==13.11.0
 PyQt6-Qt6==6.5.0  # Qt библиотеки
 QtPy==2.4.3  # Абстракция над PyQt/PySide
+
+
