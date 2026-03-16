@@ -5,6 +5,6 @@ bin/gui/__pycache__/
 bin/models/__pycache__/
 bin/utils/__pycache__/
 vehicles/
-
+.claude/*
 MirTankov-ABS-Replay-Analyser.code-workspace
 

@@ -18,7 +18,8 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from models.analyzer import BattleMatrixAnalyzer
 from models.analyzer_random import RandomBattleAnalyzer
 from utils.file_dialog import select_files_gui
-from utils.clan_extractor import ClanExtractor  # Добавляем импорт для кланов
+from utils.clan_extractor import ClanExtractor
+from gui.battle_detail import BattleDetailWindow
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -126,7 +127,8 @@ class MainWindow(QMainWindow):
         header.setStretchLastSection(False)
         header.setDefaultAlignment(Qt.AlignmentFlag.AlignCenter)
         header.setSectionsClickable(True)  # Заголовки кликабельны для сортировки
-        
+        header.sectionDoubleClicked.connect(self.on_battle_header_double_clicked)
+
         # Высота строк
         self.table.verticalHeader().setDefaultSectionSize(30)
         
@@ -560,6 +562,29 @@ class MainWindow(QMainWindow):
         self.filter_stats_label.clear()
         self.status_bar.showMessage("🔄 Поиск сброшен")
     
+    def on_battle_header_double_clicked(self, col):
+        """Открывает окно детальной статистики при двойном клике на заголовок боя"""
+        if self.current_mode != "abs" or not self.abs_analyzer:
+            return
+
+        # Battle columns start at index 4 (Player, Avg DMG, Battles, Survival%)
+        battle_index = col - 4
+        if battle_index < 0 or battle_index >= len(self.abs_analyzer.battles):
+            return
+
+        battle = self.abs_analyzer.battles[battle_index]
+        file_path = self.abs_analyzer.battle_files.get(battle['id'])
+        if not file_path:
+            return
+
+        dialog = BattleDetailWindow(
+            file_path=file_path,
+            battle_info=battle,
+            tank_short_names=self.abs_analyzer.tank_short_names,
+            parent=self
+        )
+        dialog.exec()
+
     def select_files(self):
         """Выбирает файлы для анализа"""
         files = select_files_gui()

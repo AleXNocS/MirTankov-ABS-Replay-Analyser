@@ -12,6 +12,7 @@ class BattleMatrixAnalyzer:
         self.battle_health = defaultdict(dict)    # battle_id -> player_name -> health
         self.battle_kills = defaultdict(dict)     # battle_id -> player_name -> kills
         self.player_battles = defaultdict(int)
+        self.battle_files = {}                    # battle_id -> file_path
         self.total_wins = 0
         self.skipped_battles = 0  # Счетчик пропущенных боев (30 игроков)
         self.processed_battles = 0  # Счетчик обработанных боев (14 игроков)
@@ -194,6 +195,7 @@ class BattleMatrixAnalyzer:
         self.battles[-1]['is_win'] = is_win
         self.battles[-1]['winner_team'] = winner_team
         self.battles[-1]['player_team'] = player_team
+        self.battle_files[battle_id] = str(replay_path)
         
         self.processed_battles += 1
         print(f"  {outcome} на карте {map_name}")
