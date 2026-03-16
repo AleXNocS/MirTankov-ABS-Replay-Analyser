@@ -10,7 +10,6 @@ from PyQt6.QtWidgets import (
     QButtonGroup, QRadioButton, QApplication
 )
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QAction, QFont
 from PyQt6.QtGui import QAction, QFont, QColor
 import qdarkstyle
 
@@ -346,7 +345,7 @@ class MainWindow(QMainWindow):
         # Создаем новые заголовки (добавляем колонку с процентом выживания)
         new_headers = ['Игрок', 'Ср.урон', 'Боёв', '% Выживания']
         
-        for i, battle in enumerate(self.abs_analyzer.battles):
+        for battle in self.abs_analyzer.battles:
             date_part = battle['date'][:16]
             map_part = battle['map']
             
@@ -367,12 +366,6 @@ class MainWindow(QMainWindow):
             owner_name = None
             owner_team = None
             winner_team = None
-            
-            # Получаем имя владельца из первого боя (оно одинаковое для всех)
-            if hasattr(self.abs_analyzer, 'battles') and len(self.abs_analyzer.battles) > 0:
-                # Здесь нужно получить информацию о победителе из данных боя
-                # Пока используем заглушку - будем брать из battle если есть
-                pass
             
             # Эмодзи для результата
             is_win = battle.get('is_win', False)
@@ -395,23 +388,7 @@ class MainWindow(QMainWindow):
         # Заполняем данные
         for row, row_data in enumerate(data):
             player_name = row_data[0]  # Имя игрока из первого столбца
-            
-            # Считаем количество выживаний для игрока
-            total_battles = 0
-            survived_battles = 0
-            
-            for battle in self.abs_analyzer.battles:
-                battle_id = battle['id']
-                if player_name in self.abs_analyzer.battle_data[battle_id]:
-                    total_battles += 1
-                    if hasattr(self.abs_analyzer, 'battle_health'):
-                        health = self.abs_analyzer.battle_health.get(battle_id, {}).get(player_name, 0)
-                        if health > 0:
-                            survived_battles += 1
-            
-            # Рассчитываем процент выживания
-            survival_rate = (survived_battles / total_battles * 100) if total_battles > 0 else 0
-            
+
             for col, value in enumerate(row_data):
                 if col == 0:  # Имя игрока
                     item = QTableWidgetItem(str(value))
@@ -429,8 +406,6 @@ class MainWindow(QMainWindow):
                     self.table.setItem(row, col, item)
                 
                 else:  # Столбцы с данными по боям (индекс 3 и дальше)
-                    # В цикле заполнения данных для col >= 3:
-                    # В цикле заполнения данных для col >= 3:
                     battle_index = col - 3
                     if battle_index < len(self.abs_analyzer.battles):
                         battle = self.abs_analyzer.battles[battle_index]
@@ -452,9 +427,7 @@ class MainWindow(QMainWindow):
                             # Извлекаем танк и урон из словаря
                             tank = value.get('vehicle', '')
                             damage = value.get('damage', 0)
-                            
-                            
-                            
+
                             # Первая строка: статус + танк
                             if health > 0:
                                 status_emoji = "✅"
@@ -700,9 +673,7 @@ class MainWindow(QMainWindow):
         files = sorted(files)       
 
         # Для каждого боя получаем клан соперника
-        for i,battle in enumerate(self.abs_analyzer.battles):
-           # print(f"Номер i :{i}")
-           # print(f"battle :{battle}")
+        for i, battle in enumerate(self.abs_analyzer.battles):
             if i < len(files):
                 try:
                     file_path = files[i]

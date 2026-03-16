@@ -73,10 +73,12 @@ class RandomBattleAnalyzer:
                     b = data[end]
                     if not in_str:
                         if b == ord('{'): depth += 1
-                        elif b == ord('}'): 
+                        elif b == ord('}'):
                             depth -= 1
                             if depth == 0: break
-                    elif b == ord('"') and not esc: in_str = not in_str
+                        elif b == ord('"'): in_str = True
+                    else:
+                        if b == ord('"') and not esc: in_str = False
                     if b == ord('\\') and not esc: esc = True
                     else: esc = False
                     end += 1

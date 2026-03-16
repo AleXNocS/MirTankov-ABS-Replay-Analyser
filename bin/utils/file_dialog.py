@@ -1,16 +1,11 @@
-import tkinter as tk
-from tkinter import filedialog
+from PyQt6.QtWidgets import QFileDialog
 
 def select_files_gui():
     """Открывает диалог выбора файлов"""
-    root = tk.Tk()
-    root.withdraw()
-    root.attributes('-topmost', True)
-    
-    file_paths = filedialog.askopenfilenames(
-        title="Выберите файлы реплеев (.mtreplay)",
-        filetypes=[("MT Replay files", "*.mtreplay"), ("All files", "*.*")]
+    file_paths, _ = QFileDialog.getOpenFileNames(
+        None,
+        "Выберите файлы реплеев (.mtreplay)",
+        "",
+        "MT Replay files (*.mtreplay);;All files (*.*)"
     )
-    
-    root.destroy()
-    return list(file_paths)
+    return file_paths

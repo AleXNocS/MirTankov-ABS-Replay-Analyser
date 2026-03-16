@@ -1,5 +1,18 @@
-# requirements-dev.txt
-# Основные зависимости
+# requirements.txt
+# Зависимости для запуска и разработки
+
+# Основное приложение
+PyQt6==6.5.0
+PyQt6-Qt6==6.5.0  # Qt библиотеки
+PyQt6_sip==13.11.0
+QDarkStyle==3.1  # Тёмная тема
+QtPy==2.4.3  # Абстракция над PyQt/PySide
+wotreplay==1.0.2  # Чтение реплеев World of Tanks
+
+# Зависимости wotreplay
+SQLAlchemy==2.0.48
+greenlet==3.3.2
+tqdm==4.67.3
 
 # Для сборки .exe
 pyinstaller==6.19.0
@@ -8,13 +21,9 @@ altgraph==0.17.5
 pefile==2024.8.26
 pywin32-ctypes==0.2.3
 
-# Для разработки
+# Утилиты
 colorama==0.4.6  # Для цветного вывода
 packaging==26.0  # Для работы с версиями
 setuptools==82.0.0
-greenlet==3.3.2  # Для SQLAlchemy
-PyQt6_sip==13.11.0
-PyQt6-Qt6==6.5.0  # Qt библиотеки
-QtPy==2.4.3  # Абстракция над PyQt/PySide
 
 
