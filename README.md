@@ -94,7 +94,8 @@ Sk0p1 (aka panda_rez) – Inspiration+Motivation 😎 & Tester
 ![Пример анализа АСБ](./images/ReadME_images/abs_results_example_1.png)
 ### Анализ Рандома 🎲
 ![Пример анализа Случайных боев](./images/ReadME_images/random_results_example_1.png)
-
+### Окно детального анализа боя
+![Пример детального анализа боя](./images/ReadME_images/abs_results_single_battle_1.png)
 ---
 
 ## 🐍 **Для разработчиков / For developers**
