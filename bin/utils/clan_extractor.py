@@ -27,6 +27,7 @@ class ClanExtractor:
         """
         result = {
             'clan_string': 'Без клана',
+            'primary_clan': 'Без клана',
             'clans_list': [],
             'is_mixed': False,
             'clan_stats': {},
@@ -81,13 +82,36 @@ class ClanExtractor:
             result['clan_stats'] = dict(clan_counter)
             result['is_mixed'] = len(clans_list) > 1
             result['success'] = True
-            
+
             if not clans_list:
                 result['clan_string'] = 'Без клана'
             elif len(clans_list) == 1:
                 result['clan_string'] = clans_list[0]
             else:
                 result['clan_string'] = '/'.join(clans_list)
+
+            # Определяем организующий клан соперника через fortClanDBIDs
+            bd0 = battle_data[0]
+            db_to_abbrev = {
+                p['clanDBID']: p['clanAbbrev']
+                for p in bd0.get('players', {}).values()
+                if p.get('clanDBID') and p.get('clanAbbrev')
+            }
+            fort_clan_ids = bd0.get('personal', {}).get('avatar', {}).get('fortClanDBIDs', [])
+
+            if fort_clan_ids and len(fort_clan_ids) >= 2:
+                for clan_db_id in fort_clan_ids:
+                    # Используем bd0['players'] — там есть и team, и clanDBID
+                    for p_info in bd0.get('players', {}).values():
+                        if p_info.get('team') != owner_team and p_info.get('clanDBID') == clan_db_id:
+                            result['primary_clan'] = db_to_abbrev.get(clan_db_id, 'Без клана')
+                            break
+                    if result['primary_clan'] != 'Без клана':
+                        break
+
+            # Fallback: если fortClanDBIDs недоступен — берём клан с большинством игроков
+            if result['primary_clan'] == 'Без клана' and clan_counter:
+                result['primary_clan'] = max(clan_counter, key=clan_counter.get)
                 
         except Exception as e:
             print(f"⚠️ Ошибка при извлечении клана: {e}")

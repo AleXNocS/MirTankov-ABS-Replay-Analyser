@@ -391,14 +391,15 @@ class MainWindow(QMainWindow):
             
             # Получаем информацию о клане
             clan_info = battle.get('clan_info', {})
-            clan = clan_info.get('clan', '?')
+            full_info = clan_info.get('full_info', {})
+            primary_clan = full_info.get('primary_clan') or clan_info.get('clan', '?')
             is_mixed = clan_info.get('is_mixed', False)
-            
+
             # Формируем отображение клана
             if is_mixed:
-                clan_display = f"⚔️ {clan}"
+                clan_display = f"⚔️ {primary_clan}"
             else:
-                clan_display = f"🏷️ {clan}"
+                clan_display = f"🏷️ {primary_clan}"
             
             # Определяем результат боя
             # Нам нужно знать, победил ли владелец в этом бою
