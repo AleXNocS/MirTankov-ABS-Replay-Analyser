@@ -4,6 +4,7 @@ import ctypes
 from PyQt6.QtWidgets import QApplication
 from PyQt6.QtGui import QIcon
 from gui.main_window import MainWindow
+from version import APP_VERSION
 
 def setup_taskbar_icon():
     """Критически важно: вызывать ДО создания QApplication"""
@@ -11,7 +12,7 @@ def setup_taskbar_icon():
         try:
             # Уникальный идентификатор для вашего приложения
             # Формат: Компания.Продукт.Версия
-            myappid = 'AleXNocS.MirTankovABSReplayAnalyzer.3.1.0'
+            myappid = f'AleXNocS.MirTankovABSReplayAnalyzer.{APP_VERSION}'
             ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
             print(f"✅ AppUserModelID установлен: {myappid}")
         except Exception as e:
@@ -41,7 +42,7 @@ def main():
     # 2. ПОТОМ создаем QApplication
     app = QApplication(sys.argv)
     app.setApplicationName("MirTankov ABS Replay Analyzer")
-    app.setApplicationVersion("3.1.0")
+    app.setApplicationVersion(APP_VERSION)
     
     # 3. Устанавливаем иконку для приложения
     icon_path = get_icon_path()
@@ -60,6 +61,7 @@ def main():
     
     window.show()
     print("✅ Приложение запущено")
+    window.check_for_updates_on_startup()
     
     sys.exit(app.exec())
 

@@ -1,5 +1,6 @@
 import sys
 import os
+import webbrowser
 from pathlib import Path
 from datetime import datetime
 from PyQt6.QtWidgets import (
@@ -19,7 +20,9 @@ from models.analyzer import BattleMatrixAnalyzer
 from models.analyzer_random import RandomBattleAnalyzer
 from utils.file_dialog import select_files_gui
 from utils.clan_extractor import ClanExtractor
+from utils.update_checker import UpdateCheckerThread
 from gui.battle_detail import BattleDetailWindow
+from version import APP_VERSION, GITHUB_API_URL, GITHUB_RELEASES_URL
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -46,7 +49,36 @@ class MainWindow(QMainWindow):
         main_layout = QVBoxLayout(central_widget)
         main_layout.setContentsMargins(10, 10, 10, 10)
         main_layout.setSpacing(10)
-        
+
+        # Панель уведомления об обновлении (скрыта по умолчанию)
+        self.update_bar = QFrame()
+        self.update_bar.setObjectName("updateBar")
+        self.update_bar.setStyleSheet(
+            "#updateBar { background-color: #2d5a1b; border: 1px solid #4a8f2a; border-radius: 4px; }"
+        )
+        update_bar_layout = QHBoxLayout(self.update_bar)
+        update_bar_layout.setContentsMargins(8, 4, 8, 4)
+
+        self.update_label = QLabel()
+        self.update_label.setFont(QFont("Arial", 10))
+        update_bar_layout.addWidget(self.update_label)
+        update_bar_layout.addStretch()
+
+        open_release_btn = QPushButton("Открыть страницу релизов")
+        open_release_btn.setFont(QFont("Arial", 10))
+        open_release_btn.setFixedHeight(28)
+        open_release_btn.clicked.connect(self._open_releases_page)
+        update_bar_layout.addWidget(open_release_btn)
+
+        dismiss_btn = QPushButton("✕")
+        dismiss_btn.setFont(QFont("Arial", 10))
+        dismiss_btn.setFixedSize(28, 28)
+        dismiss_btn.clicked.connect(self.update_bar.hide)
+        update_bar_layout.addWidget(dismiss_btn)
+
+        self.update_bar.hide()
+        main_layout.addWidget(self.update_bar)
+
         # Создаем меню
         self.create_menu()
         
@@ -197,6 +229,12 @@ class MainWindow(QMainWindow):
         about_action = QAction("📌 О программе", self)
         about_action.triggered.connect(self.show_about)
         help_menu.addAction(about_action)
+
+        help_menu.addSeparator()
+
+        check_updates_action = QAction("🔄 Проверить наличие обновлений", self)
+        check_updates_action.triggered.connect(self._manual_check_for_updates)
+        help_menu.addAction(check_updates_action)
     
     def apply_dark_theme(self):
         """Применяет темную тему через qdarkstyle"""
@@ -764,7 +802,7 @@ class MainWindow(QMainWindow):
             self,
             "О программе",
             "<h2>🎮 MirTankov ABS Replay Analyzer</h2>"
-            "<p><b>Версия:</b> 3.1.0</p>"
+            f"<p><b>Версия:</b> {APP_VERSION}</p>"
             "<p><b>Авторы:</b></p>"
             "<ul>"
             "<li>AleXNocS – Developer</li>"
@@ -780,3 +818,53 @@ class MainWindow(QMainWindow):
             "</ul>"
             "<p><b>Лицензия:</b> MIT</p>"
         )
+
+    # ------------------------------------------------------------------
+    # Проверка обновлений
+    # ------------------------------------------------------------------
+
+    def check_for_updates_on_startup(self):
+        """Запускает фоновую проверку обновлений после запуска приложения."""
+        self._start_update_check(silent=True)
+
+    def _manual_check_for_updates(self):
+        """Вызывается из меню Помощь — всегда показывает результат."""
+        self._start_update_check(silent=False)
+
+    def _start_update_check(self, silent: bool):
+        if hasattr(self, '_update_thread') and self._update_thread.isRunning():
+            return
+        self._update_check_silent = silent
+        self._update_thread = UpdateCheckerThread(APP_VERSION, GITHUB_API_URL)
+        self._update_thread.update_available.connect(self._on_update_available)
+        self._update_thread.up_to_date.connect(self._on_up_to_date)
+        self._update_thread.check_failed.connect(self._on_check_failed)
+        self._update_thread.start()
+
+    def _on_update_available(self, latest: str, url: str):
+        self._latest_release_url = url
+        self.update_label.setText(
+            f"🔔 Доступна новая версия {latest}! (у вас: {APP_VERSION})"
+        )
+        self.update_bar.show()
+
+    def _on_up_to_date(self):
+        if not self._update_check_silent:
+            QMessageBox.information(
+                self,
+                "Проверка обновлений",
+                f"У вас установлена актуальная версия {APP_VERSION}."
+            )
+
+    def _on_check_failed(self):
+        if not self._update_check_silent:
+            QMessageBox.warning(
+                self,
+                "Проверка обновлений",
+                "Не удалось проверить наличие обновлений.\n"
+                "Проверьте подключение к интернету."
+            )
+
+    def _open_releases_page(self):
+        url = getattr(self, '_latest_release_url', GITHUB_RELEASES_URL)
+        webbrowser.open(url)
